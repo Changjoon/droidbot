@@ -6,6 +6,8 @@ from abc import abstractmethod
 
 from . import utils
 from .intent import Intent
+from .time_watch import measure_time
+
 
 POSSIBLE_KEYS = [
     "BACK",
@@ -226,6 +228,7 @@ class EventLog(object):
                 return True
         return False
 
+    @measure_time
     def start(self):
         """
         start sending event
@@ -236,6 +239,7 @@ class EventLog(object):
         print("Action: %s" % self.event_str)
         self.device.send_event(self.event)
 
+    @measure_time
     def start_profiling(self):
         """
         start profiling the current event
@@ -260,6 +264,7 @@ class EventLog(object):
         self.is_profiling = True
         self.profiling_pid = pid
 
+    @measure_time
     def stop(self):
         """
         finish sending event
@@ -269,6 +274,7 @@ class EventLog(object):
         self.save2dir()
         self.save_views()
 
+    @measure_time
     def stop_profiling(self, output_dir=None):
         if self.profiling_method is None:
             return

@@ -11,9 +11,10 @@ from .input_policy import UtgBasedInputPolicy, UtgNaiveSearchPolicy, UtgGreedySe
                          POLICY_NAIVE_BFS, POLICY_GREEDY_BFS, \
                          POLICY_REPLAY, POLICY_MEMORY_GUIDED, \
                          POLICY_MANUAL, POLICY_MONKEY, POLICY_NONE
+from .time_watch import measure_time
 
 DEFAULT_POLICY = POLICY_GREEDY_DFS
-DEFAULT_EVENT_INTERVAL = 1
+DEFAULT_EVENT_INTERVAL = 0.3
 DEFAULT_EVENT_COUNT = 100000000
 DEFAULT_TIMEOUT = -1
 
@@ -63,6 +64,7 @@ class InputManager(object):
         self.policy = self.get_input_policy(device, app, master)
         self.profiling_method = profiling_method
 
+    @measure_time
     def get_input_policy(self, device, app, master):
         if self.policy_name == POLICY_NONE:
             input_policy = None
@@ -87,6 +89,7 @@ class InputManager(object):
             input_policy.master = master
         return input_policy
 
+    @measure_time
     def add_event(self, event):
         """
         add one event to the event list
@@ -105,6 +108,7 @@ class InputManager(object):
                 break
         event_log.stop()
 
+    @measure_time
     def start(self):
         """
         start sending event
@@ -153,6 +157,7 @@ class InputManager(object):
         self.stop()
         self.logger.info("Finish sending events")
 
+    @measure_time
     def stop(self):
         """
         stop sending event

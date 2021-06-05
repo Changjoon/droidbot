@@ -15,6 +15,8 @@ from .adapter.user_input_monitor import UserInputMonitor
 from .adapter.droidbot_ime import DroidBotIme
 from .app import App
 from .intent import Intent
+from .time_watch import measure_time
+
 
 DEFAULT_NUM = '1234567890'
 DEFAULT_CONTENT = 'Hello world!'
@@ -27,7 +29,8 @@ class Device(object):
 
     def __init__(self, device_serial=None, is_emulator=False, output_dir=None,
                  cv_mode=False, grant_perm=False, telnet_auth_token=None,
-                 enable_accessibility_hard=False, humanoid=None, ignore_ad=False):
+                 enable_accessibility_hard=False, humanoid=None, ignore_ad=False,
+                 main_activity=None):
         """
         initialize a device connection
         :param device_serial: serial number of target device
@@ -56,6 +59,7 @@ class Device(object):
         self.enable_accessibility_hard = enable_accessibility_hard
         self.humanoid = humanoid
         self.ignore_ad = ignore_ad
+        self.main_activity = main_activity
 
         # basic device information
         self.settings = {}
@@ -111,6 +115,7 @@ class Device(object):
                 else:
                     print("[CONNECTION] %s is enabled but not connected." % adapter_name)
 
+    @measure_time
     def wait_for_device(self):
         """
         wait until the device is fully booted
@@ -130,6 +135,7 @@ class Device(object):
         except:
             self.logger.warning("error waiting for device")
 
+    @measure_time
     def set_up(self):
         """
         Set connections on this device
@@ -142,6 +148,7 @@ class Device(object):
                 continue
             adapter.set_up()
 
+    @measure_time
     def connect(self):
         """
         establish connections on this device
@@ -163,6 +170,7 @@ class Device(object):
         self.check_connectivity()
         self.connected = True
 
+    @measure_time
     def disconnect(self):
         """
         disconnect current device
@@ -181,6 +189,7 @@ class Device(object):
                 import shutil
                 shutil.rmtree(temp_dir)
 
+    @measure_time
     def tear_down(self):
         for adapter in self.adapters:
             adapter_enabled = self.adapters[adapter]
@@ -188,6 +197,7 @@ class Device(object):
                 continue
             adapter.tear_down()
 
+    @measure_time
     def is_foreground(self, app):
         """
         check if app is in foreground of device
@@ -206,6 +216,7 @@ class Device(object):
             return False
         return top_activity_name.startswith(package_name)
 
+    @measure_time
     def get_model_number(self):
         """
         Get model number
@@ -214,6 +225,7 @@ class Device(object):
             self.model_number = self.adb.get_model_number()
         return self.model_number
 
+    @measure_time
     def get_sdk_version(self):
         """
         Get version of current SDK
@@ -247,7 +259,7 @@ class Device(object):
         :return: dict, display_info
         """
         if self.display_info is None or refresh:
-            self.display_info = self.adb.get_display_info()
+            self.display_info = self.adb.get_display_info(refresh)
         return self.display_info
 
     def get_width(self, refresh=False):
@@ -459,6 +471,7 @@ class Device(object):
                        % (db_name, table_name, value, name))
         return True
 
+    @measure_time
     def send_intent(self, intent):
         """
         send an intent to device via am (ActivityManager)
@@ -473,6 +486,7 @@ class Device(object):
             cmd = intent
         return self.adb.shell(cmd)
 
+    @measure_time
     def send_event(self, event):
         """
         send one event to device
@@ -481,6 +495,7 @@ class Device(object):
         """
         event.send(self)
 
+    @measure_time
     def start_app(self, app):
         """
         start an app on the device
@@ -499,11 +514,15 @@ class Device(object):
         intent = Intent(suffix=package_name)
         self.send_intent(intent)
 
-    def get_top_activity_name(self):
+    @measure_time
+    def get_top_activity_name(self, dumpsys_activities=None):
         """
         Get current activity
         """
-        r = self.adb.shell("dumpsys activity activities")
+        if dumpsys_activities is None:
+            r = self.adb.shell("dumpsys activity activities")
+        else:
+            r = dumpsys_activities
         activity_line_re = re.compile('\* Hist #\d+: ActivityRecord{[^ ]+ [^ ]+ ([^ ]+) t(\d+)}')
         m = activity_line_re.search(r)
         if m:
@@ -516,13 +535,14 @@ class Device(object):
         self.logger.warning("Unable to get top activity name.")
         return None
 
-    def get_current_activity_stack(self):
+    @measure_time
+    def get_current_activity_stack(self, dumpsys_activities=None):
         """
         Get current activity stack
         :return: a list of str, each str is an activity name, the first is the top activity name
         """
-        task_to_activities = self.get_task_activities()
-        top_activity = self.get_top_activity_name()
+        task_to_activities = self.get_task_activities(dumpsys_activities)
+        top_activity = self.get_top_activity_name(dumpsys_activities)
         if top_activity:
             for task_id in task_to_activities:
                 activities = task_to_activities[task_id]
@@ -533,14 +553,18 @@ class Device(object):
         else:
             return None
 
-    def get_task_activities(self):
+    @measure_time
+    def get_task_activities(self, dumpsys_activities=None):
         """
         Get current tasks and corresponding activities.
         :return: a dict mapping each task id to a list of activities, from top to down.
         """
         task_to_activities = {}
 
-        lines = self.adb.shell("dumpsys activity activities").splitlines()
+        if dumpsys_activities is None:
+            lines = self.adb.shell("dumpsys activity activities").splitlines()
+        else:
+            lines = dumpsys_activities.splitlines()
         activity_line_re = re.compile('\* Hist #\d+: ActivityRecord{[^ ]+ [^ ]+ ([^ ]+) t(\d+)}')
 
         for line in lines:
@@ -559,6 +583,7 @@ class Device(object):
 
         return task_to_activities
 
+    @measure_time
     def get_service_names(self):
         """
         get current running services
@@ -577,6 +602,7 @@ class Device(object):
                 services.append("%s/%s" % (package, service))
         return services
 
+    @measure_time
     def get_package_path(self, package_name):
         """
         get installation path of a package (app)
@@ -591,6 +617,7 @@ class Device(object):
             return path.strip()
         return None
 
+    @measure_time
     def start_activity_via_monkey(self, package):
         """
         use monkey to start activity
@@ -603,6 +630,7 @@ class Device(object):
         if re.search(r"(Error)|(Cannot find 'App')", out, re.IGNORECASE | re.MULTILINE):
             raise RuntimeError(out)
 
+    @measure_time
     def install_app(self, app):
         """
         install an app to device
@@ -641,7 +669,10 @@ class Device(object):
             package_info_file = open(package_info_file_name, "w")
             package_info_file.writelines(dumpsys_lines)
             package_info_file.close()
-        app.dumpsys_main_activity = self.__parse_main_activity_from_dumpsys_lines(dumpsys_lines)
+        if self.main_activity is None:
+            app.dumpsys_main_activity = self.__parse_main_activity_from_dumpsys_lines(dumpsys_lines)
+        else:
+            app.dumpsys_main_activity = self.main_activity
 
         self.logger.info("App installed: %s" % package_name)
         self.logger.info("Main activity: %s" % app.get_main_activity())
@@ -690,11 +721,12 @@ class Device(object):
             }
 
         for activity in activities:
-            if "android.intent.action.MAIN" in activities[activity]["actions"] \
-                    and "android.intent.category.LAUNCHER" in activities[activity]["categories"]:
+            if ["android.intent.action.MAIN"] == activities[activity]["actions"] \
+                    and ["android.intent.category.LAUNCHER"] == activities[activity]["categories"]:
                 main_activity = activity
         return main_activity
 
+    @measure_time
     def uninstall_app(self, app):
         """
         Uninstall an app from device.
@@ -712,6 +744,7 @@ class Device(object):
                 time.sleep(2)
             uninstall_p.terminate()
 
+    @measure_time
     def get_app_pid(self, app):
         if isinstance(app, App):
             package = app.get_package_name()
@@ -744,6 +777,7 @@ class Device(object):
 
         return None
 
+    @measure_time
     def push_file(self, local_file, remote_dir="/sdcard/"):
         """
         push file/directory to target_dir
@@ -755,9 +789,11 @@ class Device(object):
             self.logger.warning("push_file file does not exist: %s" % local_file)
         self.adb.run_cmd(["push", local_file, remote_dir])
 
+    @measure_time
     def pull_file(self, remote_file, local_file):
         self.adb.run_cmd(["pull", remote_file, local_file])
 
+    @measure_time
     def take_screenshot(self):
         # image = None
         #
@@ -796,13 +832,15 @@ class Device(object):
 
         return local_image_path
 
+    @measure_time
     def get_current_state(self):
         self.logger.debug("getting current device state...")
         current_state = None
         try:
             views = self.get_views()
-            foreground_activity = self.get_top_activity_name()
-            activity_stack = self.get_current_activity_stack()
+            dumpsys_activities = self.adb.shell("dumpsys activity activities")
+            foreground_activity = self.get_top_activity_name(dumpsys_activities)
+            activity_stack = self.get_current_activity_stack(dumpsys_activities)
             background_services = self.get_service_names()
             screenshot_path = self.take_screenshot()
             self.logger.debug("finish getting current device state...")
@@ -823,32 +861,39 @@ class Device(object):
             self.logger.warning("Failed to get current state!")
         return current_state
 
+    @measure_time
     def get_last_known_state(self):
         return self.last_know_state
 
+    @measure_time
     def view_touch(self, x, y):
         self.adb.touch(x, y)
 
+    @measure_time
     def view_long_touch(self, x, y, duration=2000):
         """
         Long touches at (x, y)
         @param duration: duration in ms
         This workaround was suggested by U{HaMi<http://stackoverflow.com/users/2571957/hami>}
         """
-        self.adb.long_touch(x, y, duration)
+        self.adb.touch(x, y)
+        #self.adb.long_touch(x, y, duration)
 
+    @measure_time
     def view_drag(self, start_xy, end_xy, duration):
         """
         Sends drag event n PX (actually it's using C{input swipe} command.
         """
         self.adb.drag(start_xy, end_xy, duration)
 
+    @measure_time
     def view_append_text(self, text):
         if self.droidbot_ime.connected:
             self.droidbot_ime.input_text(text=text, mode=1)
         else:
             self.adb.type(text)
 
+    @measure_time
     def view_set_text(self, text):
         if self.droidbot_ime.connected:
             self.droidbot_ime.input_text(text=text, mode=0)
@@ -856,12 +901,15 @@ class Device(object):
             self.logger.warning("`adb shell input text` doesn't support setting text, appending instead.")
             self.adb.type(text)
 
+    @measure_time
     def key_press(self, key_code):
         self.adb.press(key_code)
 
+    @measure_time
     def shutdown(self):
         self.adb.shell("reboot -p")
 
+    @measure_time
     def get_views(self):
         if self.cv_mode and self.adapters[self.minicap]:
             # Get views using cv module
@@ -880,6 +928,7 @@ class Device(object):
         self.logger.warning("failed to get current views!")
         return None
 
+    @measure_time
     def get_random_port(self):
         """
         get a random port on host machine to establish connection
@@ -895,6 +944,7 @@ class Device(object):
         self.__used_ports.append(port)
         return port
 
+    @measure_time
     def handle_rotation(self):
         if not self.adapters[self.minicap]:
             return

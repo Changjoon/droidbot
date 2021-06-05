@@ -2,12 +2,14 @@
 import subprocess
 import logging
 import re
+import copy
 from .adapter import Adapter
 import time
 try:
     from shlex import quote # Python 3
 except ImportError:
     from pipes import quote # Python 2
+from ..time_watch import measure_time
 
 
 class ADBException(Exception):
@@ -46,6 +48,7 @@ class ADB(Adapter):
         self.device = device
 
         self.cmd_prefix = ['adb', "-s", device.serial]
+        self.display_info = None
 
     def run_cmd(self, extra_args):
         """
@@ -150,21 +153,18 @@ class ADB(Adapter):
 
     # The following methods are originally from androidviewclient project.
     # https://github.com/dtmilano/AndroidViewClient.
-    def get_display_info(self):
+    @measure_time
+    def get_display_info(self, refresh=False):
         """
         Gets C{mDefaultViewport} and then C{deviceWidth} and C{deviceHeight} values from dumpsys.
         This is a method to obtain display dimensions and density
         """
+        if self.display_info is not None and refresh is False:
+            return self.display_info
+
         display_info = {}
         logical_display_re = re.compile(".*DisplayViewport{valid=true, .*orientation=(?P<orientation>\d+),"
                                         " .*deviceWidth=(?P<width>\d+), deviceHeight=(?P<height>\d+).*")
-        dumpsys_display_result = self.shell("dumpsys display")
-        if dumpsys_display_result is not None:
-            for line in dumpsys_display_result.splitlines():
-                m = logical_display_re.search(line, 0)
-                if m:
-                    for prop in ['width', 'height', 'orientation']:
-                        display_info[prop] = int(m.group(prop))
 
         if 'width' not in display_info or 'height' not in display_info:
             physical_display_re = re.compile('Physical size: (?P<width>\d+)x(?P<height>\d+)')
@@ -173,25 +173,7 @@ class ADB(Adapter):
                 for prop in ['width', 'height']:
                     display_info[prop] = int(m.group(prop))
 
-        if 'width' not in display_info or 'height' not in display_info:
-            # This could also be mSystem or mOverscanScreen
-            display_re = re.compile('\s*mUnrestrictedScreen=\((?P<x>\d+),(?P<y>\d+)\) (?P<width>\d+)x(?P<height>\d+)')
-            # This is known to work on older versions (i.e. API 10) where mrestrictedScreen is not available
-            display_width_height_re = re.compile('\s*DisplayWidth=(?P<width>\d+) *DisplayHeight=(?P<height>\d+)')
-            for line in self.shell('dumpsys window').splitlines():
-                m = display_re.search(line, 0)
-                if not m:
-                    m = display_width_height_re.search(line, 0)
-                if m:
-                    for prop in ['width', 'height']:
-                        display_info[prop] = int(m.group(prop))
-
-        if 'orientation' not in display_info:
-            surface_orientation_re = re.compile("SurfaceOrientation:\s+(\d+)")
-            output = self.shell("dumpsys input")
-            m = surface_orientation_re.search(output)
-            if m:
-                display_info['orientation'] = int(m.group(1))
+        display_info['orientation'] = 0
 
         density = None
         float_re = re.compile(r"[-+]?\d*\.\d+|\d+")
@@ -214,7 +196,8 @@ class ADB(Adapter):
         if not display_info_keys.issuperset(display_info):
             self.logger.warning("getDisplayInfo failed to get: %s" % display_info_keys)
 
-        return display_info
+        self.display_info = copy.deepcopy(display_info)
+        return self.display_info
 
     def get_enabled_accessibility_services(self):
         """
@@ -286,25 +269,22 @@ class ADB(Adapter):
         else:
             return -1.0
 
+    @measure_time
     def __transform_point_by_orientation(self, xy, orientation_orig, orientation_dest):
+        """
+        This function returns a portrait value, x, y
+        Because of performance issue
+        """
         (x, y) = xy
-        if orientation_orig != orientation_dest:
-            if orientation_dest == 1:
-                _x = x
-                x = self.get_display_info()['width'] - y
-                y = _x
-            elif orientation_dest == 3:
-                _x = x
-                x = y
-                y = self.get_display_info()['height'] - _x
         return x, y
 
+    @measure_time
     def get_orientation(self):
-        display_info = self.get_display_info()
-        if 'orientation' in display_info:
-            return display_info['orientation']
-        else:
-            return -1
+        """
+        This function returns a portrait value, 0.
+        Because of performance issue
+        """
+        return 0
 
     def unlock(self):
         """
@@ -319,6 +299,7 @@ class ADB(Adapter):
         """
         self.shell("input keyevent %s" % key_code)
 
+    @measure_time
     def touch(self, x, y, orientation=-1, event_type=DOWN_AND_UP):
         if orientation == -1:
             orientation = self.get_orientation()

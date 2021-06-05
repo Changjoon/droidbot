@@ -211,7 +211,8 @@ class UtgNaiveSearchPolicy(UtgBasedInputPolicy):
         self.last_state = None
 
         self.preferred_buttons = ["yes", "ok", "activate", "detail", "more", "access",
-                                  "allow", "check", "agree", "try", "go", "next"]
+                                  "allow", "check", "agree", "try", "go", "next",
+                                  "확인", "다음", "주문하기", "시작"]
 
     def generate_event_based_on_utg(self):
         """
@@ -358,7 +359,8 @@ class UtgGreedySearchPolicy(UtgBasedInputPolicy):
         self.search_method = search_method
 
         self.preferred_buttons = ["yes", "ok", "activate", "detail", "more", "access",
-                                  "allow", "check", "agree", "try", "go", "next"]
+                                  "allow", "check", "agree", "try", "go", "next",
+                                  "확인", "다음", "주문하기", "시작"]
 
         self.__nav_target = None
         self.__nav_num_steps = -1
