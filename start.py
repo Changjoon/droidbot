@@ -45,7 +45,8 @@ def parse_args():
                                  input_policy.POLICY_NAIVE_BFS,
                                  input_policy.POLICY_GREEDY_BFS,
                              ))
-
+    parser.add_argument("-main_activity", action="store", dest="main_activity", required=False, default=None,
+                        help="activity name to launch")
     # for distributed DroidBot
     parser.add_argument("-distributed", action="store", dest="distributed", choices=["master", "worker"],
                         help="Start DroidBot in distributed mode.")
@@ -61,8 +62,8 @@ def parse_args():
     parser.add_argument("-count", action="store", dest="count", default=input_manager.DEFAULT_EVENT_COUNT, type=int,
                         help="Number of events to generate in total. Default: %d" % input_manager.DEFAULT_EVENT_COUNT)
     parser.add_argument("-interval", action="store", dest="interval", default=input_manager.DEFAULT_EVENT_INTERVAL,
-                        type=int,
-                        help="Interval in seconds between each two events. Default: %d" % input_manager.DEFAULT_EVENT_INTERVAL)
+                        type=float,
+                        help="Interval in seconds between each two events. Default: %f" % input_manager.DEFAULT_EVENT_INTERVAL)
     parser.add_argument("-timeout", action="store", dest="timeout", default=input_manager.DEFAULT_TIMEOUT, type=int,
                         help="Timeout in seconds, -1 means unlimited. Default: %d" % input_manager.DEFAULT_TIMEOUT)
     parser.add_argument("-cv", action="store_true", dest="cv_mode",
@@ -123,6 +124,7 @@ def main():
             # env_policy=opts.env_policy,
             env_policy=env_manager.POLICY_NONE,
             policy_name=opts.input_policy,
+            main_activity=opts.main_activity,
             random_input=opts.random_input,
             script_path=opts.script_path,
             event_interval=opts.interval,
@@ -150,6 +152,7 @@ def main():
             # env_policy=opts.env_policy,
             env_policy=env_manager.POLICY_NONE,
             policy_name=opts.input_policy,
+            main_activity=opts.main_activity,
             random_input=opts.random_input,
             script_path=opts.script_path,
             event_interval=opts.interval,

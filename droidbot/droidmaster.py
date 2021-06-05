@@ -48,6 +48,7 @@ class DroidMaster(object):
                  output_dir=None,
                  env_policy=None,
                  policy_name=None,
+                 main_activity=None,
                  random_input=False,
                  script_path=None,
                  event_count=None,
@@ -84,6 +85,7 @@ class DroidMaster(object):
 
         self.env_policy = env_policy
         self.policy_name = policy_name
+        self.main_activity = main_activity
         self.random_input = random_input
         self.script_path = script_path
         self.event_count = event_count
@@ -180,6 +182,7 @@ class DroidMaster(object):
                                           output_dir=self.output_dir,
                                           env_policy=self.env_policy,
                                           policy_name=self.policy_name,
+                                          main_activity=self.main_activity,
                                           random_input=self.random_input,
                                           script_path=script_path,
                                           event_count=self.event_count,

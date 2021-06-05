@@ -29,6 +29,7 @@ class DroidBot(object):
                  output_dir=None,
                  env_policy=None,
                  policy_name=None,
+                 main_activity=None,
                  random_input=False,
                  script_path=None,
                  event_count=None,
@@ -92,7 +93,8 @@ class DroidBot(object):
                 grant_perm=grant_perm,
                 enable_accessibility_hard=self.enable_accessibility_hard,
                 humanoid=self.humanoid,
-                ignore_ad=ignore_ad)
+                ignore_ad=ignore_ad,
+                main_activity=main_activity)
             self.app = App(app_path, output_dir=self.output_dir)
 
             self.env_manager = AppEnvManager(

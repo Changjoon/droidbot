@@ -30,6 +30,7 @@ class DroidBotConn(Adapter):
                  output_dir=None,
                  env_policy=None,
                  policy_name=None,
+                 main_activity=None,
                  random_input=False,
                  script_path=None,
                  event_count=None,
@@ -61,6 +62,7 @@ class DroidBotConn(Adapter):
         self.output_dir = output_dir
         self.env_policy = env_policy
         self.policy_name = policy_name
+        self.main_activity = main_activity
         self.random_input = random_input
         self.script_path = script_path
         self.event_count = event_count
@@ -89,6 +91,7 @@ class DroidBotConn(Adapter):
                         "-interval", str(self.event_interval),
                         "-count", str(self.event_count),
                         "-policy", self.policy_name,
+                        "-main_activity", self.main_activity,
                         "-grant_perm", "-keep_env",
                         "-o", "%s_%d" %
                         (self.output_dir, self.device_unique_id),

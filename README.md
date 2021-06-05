@@ -96,3 +96,8 @@ A sample evaluation report can be found [here](http://honeynet.github.io/droidbo
 - [DroidBot Blog Posts](http://honeynet.github.io/droidbot/)
 - [droidbotApp Source Code](https://github.com/ylimit/droidbotApp)
 - [How to contact the author](http://ylimit.github.io)
+
+## Confirmed command to run
+```
+$ droidbot -a ./test.apk -o ~/outdir -script ./initialize_script.json -random -grant_perm -main_activity com.company.activity.name
+```
