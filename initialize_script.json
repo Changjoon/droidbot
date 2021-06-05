@@ -1,0 +1,96 @@
+{
+    "views": {
+        "confirm_button": {
+            "resource_id": ".*id/confirm_button"
+        },
+        "agree_checkbox": {
+            "resource_id": ".*id/checkBox",
+            "class": ".*CheckBox"
+        },
+        "start_button": {
+            "resource_id": ".*id/tutorialStartButton",
+            "class": ".*ViewGroup"
+        },
+        "marketing_confirm_button": {
+            "resource_id": ".*id/positiveButton"
+        },
+        "address_search_edittext": {
+            "resource_id": ".*id/search_keyword_edittext"
+        },
+        "address_search_keyword_button": {
+            "resource_id": ".*id/search_keyword_button"
+        },
+        "address_title_textview": {
+            "resource_id": ".*id/address_title_textvew",
+            "class": ".*TextView"
+        },
+        "detail_address_edittext": {
+            "resource_id": ".*id/detail_address_edittext",
+            "class": ".*EditText"
+        },
+        "detail_address_confirm_button": {
+            "resource_id": ".*id/detail_address_confirm_button",
+            "class": ".*Button"
+        }
+    },
+    "states": {
+        "permission_state": {
+            "activity": ".*com.baemin.presentation.ui.home.HomeActivity",
+            "views": ["confirm_button"]
+        },
+        "welcome_state": {
+            "activity": ".*com.baemin.presentation.ui.tutorial.TutorialActivity",
+            "views": ["agree_checkbox"]
+        },
+        "address_state": {
+            "activity": ".*com.baemin.presentation.ui.location.LocationActivity",
+            "views": ["address_search_edittext"] 
+        }
+    },
+    "operations": {
+        "permission_operation": [
+            {
+                "event_type": "touch",
+                "target_view": "confirm_button"
+            }
+        ],
+        "welcome_operation": [
+            {
+                "event_type": "touch",
+                "target_view": "agree_checkbox"
+            },
+            {
+                "event_type": "touch",
+                "target_view": "start_button"
+            },
+            {
+                "event_type": "touch",
+                "target_view": "marketing_confirm_button"
+            }
+        ],
+        "address_operation": [
+            {
+                "event_type": "set_text",
+                "target_view": "address_search_edittext",
+                "text": "장은빌딩"
+            },
+            {
+                "event_type": "touch",
+                "target_view": "address_search_keyword_button"
+            },
+            {
+                "event_type": "touch",
+                "target_view": "address_title_textview"
+            },
+            {
+                "event_type": "touch",
+                "target_view": "detail_address_confirm_button"
+            }
+        ]
+    },
+    "main": {
+        "permission_state": ["permission_operation"],
+        "welcome_state": ["welcome_operation"],
+        "address_state": ["address_operation"]
+    }
+}

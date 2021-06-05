@@ -690,9 +690,10 @@ class Device(object):
             }
 
         for activity in activities:
-            if "android.intent.action.MAIN" in activities[activity]["actions"] \
-                    and "android.intent.category.LAUNCHER" in activities[activity]["categories"]:
+            if ["android.intent.action.VIEW"] == activities[activity]["actions"] \
+                    and ["android.intent.category.DEFAULT"] == activities[activity]["categories"]:
                 main_activity = activity
+                break
         return main_activity
 
     def uninstall_app(self, app):

@@ -47,11 +47,7 @@ class App(object):
         get package name of current app
         :return:
         """
-        if self.main_activity is not None:
-            return self.main_activity
-        else:
-            self.logger.warning("Cannot get main activity from manifest. Using dumpsys result instead.")
-            return self.dumpsys_main_activity
+        return self.dumpsys_main_activity
 
     def get_start_intent(self):
         """
