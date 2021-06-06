@@ -4,6 +4,7 @@ import re
 import subprocess
 import sys
 import time
+from datetime import datetime
 
 from .adapter.adb import ADB
 from .adapter.droidbot_app import DroidBotAppConn
@@ -15,6 +16,8 @@ from .adapter.user_input_monitor import UserInputMonitor
 from .adapter.droidbot_ime import DroidBotIme
 from .app import App
 from .intent import Intent
+from .constants import Const
+
 
 DEFAULT_NUM = '1234567890'
 DEFAULT_CONTENT = 'Hello world!'
@@ -95,6 +98,13 @@ class Device(object):
         if self.is_emulator:
             self.logger.info("disable minicap on emulator")
             self.adapters[self.minicap] = False
+
+        self.__init_dev_resources()
+
+    def __init_dev_resources(self):
+        for cmd in [ "rm -rf {}".format(Const.REMOTE_SCREENSHOT_DIR),
+                     "mkdir {}".format(Const.REMOTE_SCREENSHOT_DIR) ]:
+            self.adb.shell(cmd)
 
     def check_connectivity(self):
         """
@@ -759,6 +769,17 @@ class Device(object):
     def pull_file(self, remote_file, local_file):
         self.adb.run_cmd(["pull", remote_file, local_file])
 
+    def take_screenshot_without_pull(self):
+        tag = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+        fname = "screen_{}.png".format(tag)
+        remote_img_path = os.path.join(Const.REMOTE_SCREENSHOT_DIR, fname)
+
+        cmd = "screencap -p {}".format(remote_img_path)
+        self.adb.shell(cmd)
+
+        return os.path.join(Const.LOCAL_SCREENSHOT_DIR, fname)
+
     def take_screenshot(self):
         # image = None
         #
@@ -805,7 +826,7 @@ class Device(object):
             foreground_activity = self.get_top_activity_name()
             activity_stack = self.get_current_activity_stack()
             background_services = self.get_service_names()
-            screenshot_path = self.take_screenshot()
+            screenshot_path = self.take_screenshot_without_pull()
             self.logger.debug("finish getting current device state...")
             from .device_state import DeviceState
             current_state = DeviceState(self,

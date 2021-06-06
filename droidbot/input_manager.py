@@ -11,6 +11,8 @@ from .input_policy import UtgBasedInputPolicy, UtgNaiveSearchPolicy, UtgGreedySe
                          POLICY_NAIVE_BFS, POLICY_GREEDY_BFS, \
                          POLICY_REPLAY, POLICY_MEMORY_GUIDED, \
                          POLICY_MANUAL, POLICY_MONKEY, POLICY_NONE
+from .constants import Const
+
 
 DEFAULT_POLICY = POLICY_GREEDY_DFS
 DEFAULT_EVENT_INTERVAL = 1
@@ -100,7 +102,8 @@ class InputManager(object):
         event_log = EventLog(self.device, self.app, event, self.profiling_method)
         event_log.start()
         while True:
-            time.sleep(self.event_interval)
+            #time.sleep(self.event_interval)
+            #time.sleep(0.3)
             if not self.device.pause_sending_event:
                 break
         event_log.stop()
@@ -165,4 +168,8 @@ class InputManager(object):
             if pid is not None:
                 self.device.adb.shell("kill -9 %d" % pid)
         self.enabled = False
+        self.pull_screenshot_files()
+
+    def pull_screenshot_files(self):
+        self.device.pull_file(Const.REMOTE_SCREENSHOT_DIR, self.device.output_dir)
 

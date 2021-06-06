@@ -153,7 +153,7 @@ class UTG(object):
             utg_node = {
                 "id": state_str,
                 "shape": "image",
-                "image": os.path.relpath(state.screenshot_path, self.device.output_dir),
+                "image": state.screenshot_path,
                 "label": short_activity_name,
                 # "group": state.foreground_activity,
                 "package": package_name,

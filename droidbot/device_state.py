@@ -39,6 +39,7 @@ class DeviceState(object):
 
     def to_dict(self):
         state = {'tag': self.tag,
+                 'screenshot': self.screenshot_path,
                  'state_str': self.state_str,
                  'state_str_content_free': self.structure_str,
                  'foreground_activity': self.foreground_activity,
@@ -179,9 +180,9 @@ class DeviceState(object):
             state_json_file = open(dest_state_json_path, "w")
             state_json_file.write(self.to_json())
             state_json_file.close()
-            import shutil
-            shutil.copyfile(self.screenshot_path, dest_screenshot_path)
-            self.screenshot_path = dest_screenshot_path
+            #import shutil
+            #shutil.copyfile(self.screenshot_path, dest_screenshot_path)
+            #self.screenshot_path = dest_screenshot_path
             # from PIL.Image import Image
             # if isinstance(self.screenshot_path, Image):
             #     self.screenshot_path.save(dest_screenshot_path)
@@ -207,7 +208,8 @@ class DeviceState(object):
             from PIL import Image
             # Load the original image:
             view_bound = view_dict['bounds']
-            original_img = Image.open(self.screenshot_path)
+            img_path = os.path.join(output_dir, self.screenshot_path)
+            original_img = Image.open(img_path)
             # view bound should be in original image bound
             view_img = original_img.crop((min(original_img.width - 1, max(0, view_bound[0][0])),
                                           min(original_img.height - 1, max(0, view_bound[0][1])),
